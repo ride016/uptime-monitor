@@ -1,0 +1,103 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tes unit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Pasang Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - name: Pasang dependensi
+        run: npm ci
+        working-directory: api
+
+      - name: Jalankan tes
+        run: npm test
+        working-directory: api
+
+  integration:
+    name: Tes integrasi Docker Compose
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan file .env
+        run: cp .env.example .env
+
+      - name: Build dan jalankan semua container
+        run: docker compose up -d --build --wait --wait-timeout 180
+
+      - name: Cek API lewat Nginx
+        run: |
+          curl -fsS http://localhost:8080/api/health
+          curl -fsS http://localhost:8080/api/monitors
+
+      - name: Cek halaman web
+        run: curl -fsS http://localhost:8080/ | grep -q "Uptime Monitor"
+
+      - name: Tampilkan log jika gagal
+        if: failure()
+        run: docker compose logs
+
+      - name: Matikan container
+        if: always()
+        run: docker compose down -v
+
+  deploy:
+    name: Kirim image ke Docker Hub
+    needs: integration
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login ke Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build dan push image API
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/uptime-monitor-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/uptime-monitor-api:${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+
+      - name: Build dan push image web
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/uptime-monitor-web:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/uptime-monitor-web:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max

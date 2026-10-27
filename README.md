@@ -510,3 +510,7 @@ uptime-monitor/
 |---|---|
 | Implementasi aplikasi dalam container | [isi tautan video] |
 | Penjelasan implementasi CI/CD | [isi tautan video] |
+
+
+
+<!-- CI/CD verification test -->

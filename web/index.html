@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uptime Monitor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7CC4FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 12 7 12 10 5 14 19 17 12 21 12"></polyline></svg>
+      <span class="brand">Uptime Monitor</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div>
+      <h1>Status layanan</h1>
+      <div class="subtitle" id="last-updated">Memuat data...</div>
+    </div>
+
+    <div id="banner" class="banner" role="status" hidden></div>
+
+    <section class="summary" id="summary" aria-label="Ringkasan"></section>
+
+    <div class="layout">
+      <section class="panel list-panel" aria-labelledby="judul-monitor">
+        <div class="panel-head">
+          <h2 id="judul-monitor">Daftar monitor</h2>
+          <div class="legend">
+            <span><i class="swatch b-up"></i>Normal</span>
+            <span><i class="swatch b-slow"></i>Lambat</span>
+            <span><i class="swatch b-down"></i>Gangguan</span>
+          </div>
+        </div>
+        <div id="monitors"></div>
+      </section>
+
+      <div class="side">
+        <section class="panel" aria-labelledby="judul-form">
+          <h2 id="judul-form">Tambah monitor</h2>
+          <form id="monitor-form" novalidate>
+            <div class="field">
+              <label for="f-nama">Nama monitor</label>
+              <input id="f-nama" name="name" type="text" maxlength="100" placeholder="Contoh: Situs Utama" required>
+            </div>
+            <div class="field">
+              <label for="f-url">URL yang dipantau</label>
+              <input id="f-url" name="url" type="url" maxlength="500" placeholder="https://contoh.com" required>
+            </div>
+            <p id="form-error" class="form-error" role="alert" hidden></p>
+            <button type="submit" class="btn-primary">Tambah monitor</button>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="judul-insiden">
+          <h2 id="judul-insiden">Insiden terbaru</h2>
+          <ul class="incidents" id="incidents"></ul>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
